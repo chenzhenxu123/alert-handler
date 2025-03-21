@@ -1,0 +1,60 @@
+模拟告警发送
+=====================================
+
+curl -X POST http://alert-handler.monitoring.svc.cluster.local:5000/handle_alert \
+-H "Content-Type: application/json" \
+-d '{
+  "status": "firing",
+  "alerts": [
+    {
+      "status": "firing",
+      "labels": {
+        "alertname": "HighCPUUsage",
+        "instance": "server-01",
+        "job": "node_exporter",
+        "severity": "critical",
+        "level":"4",
+        "monitor": "production"
+      },
+      "annotations": {
+        "summary": "High CPU usage on server-01",
+        "description": "CPU usage has been above 90% for the last 5 minutes."
+      },
+      "startsAt": "2023-10-12T12:00:00Z",
+      "endsAt": "0001-01-01T00:00:00Z",
+      "generatorURL": "http://prometheus.example.com/graph?g0.expr=cpu_usage%7Binstance%3D%22server-01%22%7D&g0.tab=1",
+      "fingerprint": "a1b2c3d4e5f6"
+    }
+  ]
+}'
+
+
+模拟告警恢复
+=======================
+
+curl -X POST http://alert-handler.monitoring.svc.cluster.local:5000/handle_alert \
+-H "Content-Type: application/json" \
+-d '{
+  "status": "resolved",
+  "alerts": [
+    {
+      "status": "resolved",
+      "labels": {
+        "alertname": "HighCPUUsage",
+        "instance": "server-01",
+        "job": "node_exporter",
+        "severity": "critical",
+        "level":"4",
+        "monitor": "production"
+      },
+      "annotations": {
+        "summary": "[RESOLVED] High CPU usage on server-01",
+        "description": "CPU usage has returned to normal levels."
+      },
+      "startsAt": "2023-10-12T12:00:00Z",
+      "endsAt": "2023-10-12T12:30:00Z",
+      "generatorURL": "http://prometheus.example.com/graph?g0.expr=cpu_usage%7Binstance%3D%22server-01%22%7D&g0.tab=1",
+      "fingerprint": "a1b2c3d4e5f6"
+    }
+  ]
+}'

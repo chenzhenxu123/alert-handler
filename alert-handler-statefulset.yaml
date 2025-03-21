@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: alert-handler
+  namespace: monitoring
+  labels:
+    app: alert-handler
+spec:
+  serviceName: alert-handler-headless  # 需要配套的Headless Service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alert-handler
+  template:
+    metadata:
+      labels:
+        app: alert-handler
+    spec:
+      containers:
+        - name: alert-handler
+          image: chenzhenxu123/alert-handler:1.0.34
+          ports:
+            - containerPort: 5000
+          env:
+            - name: NOTIFY_CHANNEL
+              value: feishu      #默认是feishu   可以修改为dingtalk ，也就是钉钉
+            - name: WEBHOOK_URL
+              valueFrom:
+                secretKeyRef:
+                  name: alert-secrets
+                  key: webhook
+            - name: DEEPSEEK_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: alert-secrets
+                  key: deepseek-key
+          volumeMounts:
+            - name: alerttemplates
+              mountPath: /app/templates/
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+      volumes:
+        - name: alerttemplates
+          configMap:
+            name: alert-templates
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alert-handler
+  namespace: monitoring
+spec:
+  selector:
+    app: alert-handler
+  ports:
+    - protocol: TCP
+      port: 5000
+      targetPort: 5000
